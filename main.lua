@@ -1,5 +1,9 @@
 backbone = {}
 
+network = {
+  
+}
+
 backbone.CreateProtected()
 
 end
@@ -16,6 +20,31 @@ end
 backbone.ProtectedFire()
 
 end
+
+backbone.Sever()
+
+end
+
+backbone.Block()
+
+end
+
+backbone.GetLogs()
+
+end
+
+backbone.GetMostRecentFire()
+
+end
+
+backbone.BlockArgument()
+
+end
+
+backbone.GetFiresByName()
+
+end
+
 
 
 return backbone
