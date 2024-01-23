@@ -1,10 +1,12 @@
 local Backbone = {}
 
 
+
 Backbone.Dependants = {
 	["Folder"] = nil,
 	["Path1"] = nil,
-	["Path2"] = nil
+	["Path2"] = nil,
+	["Client"] = require(game:GetService("ReplicatedStorage"):WaitForChild("BackboneClient"))
 }
 
 Backbone.Funcs = {
@@ -36,6 +38,11 @@ function Backbone.__CreateLog(log, ...)
 	if log == "Creation" then
 		table.insert(Backbone.Logs, 1, "Created " ..Args[1].." with backend ID of "..Args[2]..". ")
 	end
+	
+	if log == "Creation2" then
+		table.insert(Backbone.Logs, 1, "Created " ..Args[1].." with backend ID of "..Args[2]..". Refrence is stored on the client.")
+	end
+	
 	
 	if log == "Fire" then
 		table.insert(Backbone.Logs, 1, "Fired " ..Args[1].." with params: ".. ... ..". ")
@@ -87,8 +94,8 @@ function Backbone.__GenerateID()
 end
 
 function Backbone.__AssessBlocks(name, parameters, profile)
+	if profile['disabled'] == true then return false end
 	if #profile['blocked'] == 0 then return true end
-	
 	for i, v in ipairs(profile['blocked']) do
 		if v["param"] == 0 then
 				for j, k in pairs(parameters) do
@@ -122,10 +129,13 @@ end
 function Backbone.Fire(name, ...)
 	local Profile = Backbone.__GetPointerByName(name)
 	assert(Profile[1], "Path does not exist.")
+	
 	local Fireable = Backbone.__AssessBlocks(name, {...}, Profile[2])
 	if Fireable then Backbone.Funcs[Profile[2]['id']]({...}) end
 	
 end
+
+
 
 
 function Backbone.Add(name, request)
@@ -150,6 +160,18 @@ function Backbone.Block(name, value, parameterNumber, func)
 	
 end
 
+function Backbone.ClientAdd(name, request)
+	assert(not Backbone.__GetPointerByName(name)[1], "A path with this name already exists.")
+	local ID = Backbone.__StoreFunction(request["function"])
+	Backbone.Pointers[name] = request
+	print(Backbone.Pointers)
+	Backbone.Pointers[name]["id"] = ID
+	Backbone.Pointers[name]["blocked"] = {}
+	Backbone.Pointers[name]["disabled"] = request["disabled"] or false
+	Backbone.Pointers[name]["task-location"] = "client"
+	Backbone.__CreateLog("Creation2", name, ID)
+end 
+
 function Backbone.Unblock(name, value, loc)
 	local Profile = Backbone.__GetPointerByName(name)
 	
@@ -169,6 +191,22 @@ function Backbone.Unblock(name, value, loc)
 		end
 	end	
 	return "Removed ".. RemovalCount.." instance(s) of blocks."
+end
+
+function Backbone.Disable(name)
+	local Profile = Backbone.__GetPointerByName(name)
+	assert(Profile[1], "Path does not exist.")
+	
+	
+	Profile[2]['disabled'] = true
+end
+
+function Backbone.Enable(name)
+	local Profile = Backbone.__GetPointerByName(name)
+	assert(Profile[1], "Path does not exist.")
+
+
+	Profile[2]['disabled'] = false
 end
 
 return Backbone
