@@ -6,7 +6,7 @@ Backbone.Dependants = {
 	["Folder"] = nil,
 	["Path1"] = nil,
 	["Path2"] = nil,
-	["Client"] = require(game:GetService("ReplicatedStorage"):WaitForChild("BackboneClient"))
+	["Client"] = require(game:GetService("ReplicatedStorage"):WaitForChild("BackboneClient")),
 }
 
 Backbone.Funcs = {
