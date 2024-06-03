@@ -6,7 +6,7 @@ Backbone.Dependants = {
 	["Folder"] = nil,
 	["Path1"] = nil,
 	["Path2"] = nil,
-	["Client"] = require(game:GetService("ReplicatedStorage"):WaitForChild("BackboneClient")),
+	["Client"] = require(game.ReplicatedStorage.BackboneClientBridge)
 }
 
 Backbone.Funcs = {
@@ -35,24 +35,23 @@ function Backbone.__CreateLog(log, ...)
 	
 	if Length > 99 then Backbone.Logs[100] = nil end
 	
-	if log == "Creation" then
+	if log == 1 then
 		table.insert(Backbone.Logs, 1, "Created " ..Args[1].." with backend ID of "..Args[2]..". ")
-	end
 	
-	if log == "Creation2" then
+	elseif log == 2 then
 		table.insert(Backbone.Logs, 1, "Created " ..Args[1].." with backend ID of "..Args[2]..". Refrence is stored on the client.")
 	end
 	
 	
-	if log == "Fire" then
+	if log == 3 then
 		table.insert(Backbone.Logs, 1, "Fired " ..Args[1].." with params: ".. ... ..". ")
 	end
 	
-	if log == "Blocked" then
+	if log == 4 then
 		table.insert(Backbone.Logs, 1, "Blocked "..Args[1].." from firing as a matching block was found.")
 	end
 	
-	if log == "Block" then
+	if log == 5 then
 		table.insert(Backbone.Logs, 1, "Added block list for "..Args[1].." when argument #"..tostring(Args[3]).." is set to "..tostring(Args[2]))
 		
 	end
@@ -63,7 +62,7 @@ function Backbone.__Network()
 	Folder.Name = "Backbone Depandants"
 	Folder.Parent = game:GetService("ReplicatedStorage")
 
-	local Path1 = Instance.new("RemoteEvent")
+	local Path1 = Instance.new("BindableEvent")
 	Path1.Name = "Path1"
 	Path1.Parent = Folder
 	
@@ -73,7 +72,10 @@ function Backbone.__Network()
 	
 	Backbone.Dependants["Folder"] = Folder
 	Backbone.Dependants["Path1"] = Path1
-	Backbone.Dependants["Path2"] = Path1
+	Backbone.Dependants["Path2"] = Path2
+	
+	
+	
 	
 	return true
 end
@@ -126,17 +128,43 @@ function Backbone.__StoreFunction(func)
 	return ID	
 end
 
+
+
 function Backbone.Fire(name, ...)
 	local Profile = Backbone.__GetPointerByName(name)
 	assert(Profile[1], "Path does not exist.")
+	if Profile[2]['task-location'] ~= "server" then
+		warn("Attempted to fire a non-server task under server, request for function fire was stopped of "..name)
+		return
+	end
 	
 	local Fireable = Backbone.__AssessBlocks(name, {...}, Profile[2])
 	if Fireable then Backbone.Funcs[Profile[2]['id']]({...}) end
 	
 end
 
+function Backbone.FireClient(name, whom, ...)
+	local Profile = Backbone.__GetPointerByName(name)
+	assert(Profile[1], "Path does not exist.")
+	if Profile[2]['task-location'] ~= "client" then
+		warn("Attempted to fire a server task under client, request for function fire was stopped of "..name)
+		return
+	end
+	
+	print(name)
 
-
+	local Fireable = Backbone.__AssessBlocks(name, {...}, Profile[2])
+	print(typeof(whom))
+	print(typeof({game.Players:WaitForChild("backbone398383")}))
+	if typeof(whom) == 'Instance' then
+		if Fireable then Backbone.Dependants.Path2:FireClient(whom, name, {...}) end
+	elseif typeof(whom) == 'table' then
+		for _, player in pairs(whom) do
+			Backbone.Dependants.Path2:FireClient(player, name, {...})
+		end
+	end 
+	
+end
 
 function Backbone.Add(name, request)
 	assert(not Backbone.__GetPointerByName(name)[1], "A path with this name already exists.")
@@ -146,7 +174,7 @@ function Backbone.Add(name, request)
 	Backbone.Pointers[name]["id"] = ID
 	Backbone.Pointers[name]["blocked"] = {}
 	Backbone.Pointers[name]["task-location"] = "server"
-	Backbone.__CreateLog("Creation", name, ID)
+	Backbone.__CreateLog(1, name, ID)
 end
 
 function Backbone.Block(name, value, parameterNumber, func)
@@ -169,7 +197,8 @@ function Backbone.ClientAdd(name, request)
 	Backbone.Pointers[name]["blocked"] = {}
 	Backbone.Pointers[name]["disabled"] = request["disabled"] or false
 	Backbone.Pointers[name]["task-location"] = "client"
-	Backbone.__CreateLog("Creation2", name, ID)
+	Backbone.Dependants["Client"].AddRef(ID, request["function"])
+	Backbone.__CreateLog(2, name, ID)
 end 
 
 function Backbone.Unblock(name, value, loc)
