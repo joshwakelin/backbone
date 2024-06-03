@@ -6,7 +6,6 @@ Backbone.Dependants = {
 	["Folder"] = nil,
 	["Path1"] = nil,
 	["Path2"] = nil,
-	["Client"] = require(game.ReplicatedStorage.BackboneClientBridge)
 }
 
 Backbone.Funcs = {
@@ -62,7 +61,7 @@ function Backbone.__Network()
 	Folder.Name = "Backbone Depandants"
 	Folder.Parent = game:GetService("ReplicatedStorage")
 
-	local Path1 = Instance.new("BindableEvent")
+	local Path1 = Instance.new("RemoteFunction")
 	Path1.Name = "Path1"
 	Path1.Parent = Folder
 	
@@ -76,8 +75,9 @@ function Backbone.__Network()
 	
 	
 	
+	return Backbone.Dependants	
 	
-	return true
+
 end
 
 
@@ -101,7 +101,6 @@ function Backbone.__AssessBlocks(name, parameters, profile)
 	for i, v in ipairs(profile['blocked']) do
 		if v["param"] == 0 then
 				for j, k in pairs(parameters) do
-					print(v, k)
 					if v == k then 
 						--check callback
 						return false
@@ -124,7 +123,6 @@ end
 function Backbone.__StoreFunction(func)
 	local ID = Backbone.__GenerateID()
 	Backbone.Funcs[ID] = func
-	print(Backbone.Funcs)
 	return ID	
 end
 
@@ -143,34 +141,12 @@ function Backbone.Fire(name, ...)
 	
 end
 
-function Backbone.FireClient(name, whom, ...)
-	local Profile = Backbone.__GetPointerByName(name)
-	assert(Profile[1], "Path does not exist.")
-	if Profile[2]['task-location'] ~= "client" then
-		warn("Attempted to fire a server task under client, request for function fire was stopped of "..name)
-		return
-	end
-	
-	print(name)
 
-	local Fireable = Backbone.__AssessBlocks(name, {...}, Profile[2])
-	print(typeof(whom))
-	print(typeof({game.Players:WaitForChild("backbone398383")}))
-	if typeof(whom) == 'Instance' then
-		if Fireable then Backbone.Dependants.Path2:FireClient(whom, name, {...}) end
-	elseif typeof(whom) == 'table' then
-		for _, player in pairs(whom) do
-			Backbone.Dependants.Path2:FireClient(player, name, {...})
-		end
-	end 
-	
-end
 
 function Backbone.Add(name, request)
 	assert(not Backbone.__GetPointerByName(name)[1], "A path with this name already exists.")
 	local ID = Backbone.__StoreFunction(request["function"])
 	Backbone.Pointers[name] = request
-	print(Backbone.Pointers)
 	Backbone.Pointers[name]["id"] = ID
 	Backbone.Pointers[name]["blocked"] = {}
 	Backbone.Pointers[name]["task-location"] = "server"
@@ -188,18 +164,7 @@ function Backbone.Block(name, value, parameterNumber, func)
 	
 end
 
-function Backbone.ClientAdd(name, request)
-	assert(not Backbone.__GetPointerByName(name)[1], "A path with this name already exists.")
-	local ID = Backbone.__StoreFunction(request["function"])
-	Backbone.Pointers[name] = request
-	print(Backbone.Pointers)
-	Backbone.Pointers[name]["id"] = ID
-	Backbone.Pointers[name]["blocked"] = {}
-	Backbone.Pointers[name]["disabled"] = request["disabled"] or false
-	Backbone.Pointers[name]["task-location"] = "client"
-	Backbone.Dependants["Client"].AddRef(ID, request["function"])
-	Backbone.__CreateLog(2, name, ID)
-end 
+
 
 function Backbone.Unblock(name, value, loc)
 	local Profile = Backbone.__GetPointerByName(name)
