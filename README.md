@@ -1,2 +1,2 @@
 # backbone
-Luau networking framework
+Luau function management framework
