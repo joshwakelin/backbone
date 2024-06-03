@@ -6,6 +6,7 @@ Backbone.Dependants = {
 	["Folder"] = nil,
 	["Path1"] = nil,
 	["Path2"] = nil,
+	["Client"] = require(game.ReplicatedStorage.BackboneClientBridge)
 }
 
 Backbone.Funcs = {
@@ -101,6 +102,7 @@ function Backbone.__AssessBlocks(name, parameters, profile)
 	for i, v in ipairs(profile['blocked']) do
 		if v["param"] == 0 then
 				for j, k in pairs(parameters) do
+					print(v, k)
 					if v == k then 
 						--check callback
 						return false
@@ -123,6 +125,7 @@ end
 function Backbone.__StoreFunction(func)
 	local ID = Backbone.__GenerateID()
 	Backbone.Funcs[ID] = func
+	print(Backbone.Funcs)
 	return ID	
 end
 
@@ -142,11 +145,11 @@ function Backbone.Fire(name, ...)
 end
 
 
-
 function Backbone.Add(name, request)
 	assert(not Backbone.__GetPointerByName(name)[1], "A path with this name already exists.")
 	local ID = Backbone.__StoreFunction(request["function"])
 	Backbone.Pointers[name] = request
+	print(Backbone.Pointers)
 	Backbone.Pointers[name]["id"] = ID
 	Backbone.Pointers[name]["blocked"] = {}
 	Backbone.Pointers[name]["task-location"] = "server"
@@ -163,7 +166,6 @@ function Backbone.Block(name, value, parameterNumber, func)
 	})
 	
 end
-
 
 
 function Backbone.Unblock(name, value, loc)
