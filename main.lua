@@ -6,7 +6,6 @@ Backbone.Dependants = {
 	["Folder"] = nil,
 	["Path1"] = nil,
 	["Path2"] = nil,
-	["Client"] = require(game.ReplicatedStorage.BackboneClientBridge)
 }
 
 Backbone.Funcs = {
@@ -29,6 +28,10 @@ Backbone.Pointers = {
 } 
 
 
+
+function Backbone.__Replicate()
+	
+end
 function Backbone.__CreateLog(log, ...)
 	local Args = {...}
 	local Length = #Backbone.Logs
@@ -85,7 +88,6 @@ end
 
 
 
-
 function Backbone.__GenerateID()
 	local Final = ""
 
@@ -117,6 +119,7 @@ function Backbone.__AssessBlocks(name, parameters, profile)
 		end	
 	return true	
 end
+
 function Backbone.__GetPointerByName(name)
 	if Backbone.Pointers[name] then return {true, Backbone.Pointers[name]} else return {false, nil} end
 end
@@ -143,6 +146,11 @@ function Backbone.Fire(name, ...)
 	if Fireable then Backbone.Funcs[Profile[2]['id']]({...}) end
 	
 end
+
+
+
+
+
 
 
 function Backbone.Add(name, request)
